@@ -1,0 +1,11 @@
+// .skin: shotgun.skin
+//
+// .md3: D:\a_Eigene Dateien\__Eclipse\workspace\WORKSPACE_MD3\MD3_reader_v5\data\models\weapons2\shotgun\shotgun.md3
+//
+// tags
+tag_flash,
+tag_weapon,
+
+// surfaces/shaders 
+w_shotgun02, models/weapons2/shotgun/shotgun_laser.tga
+w_shotgun01, models/weapons2/shotgun/shotgun.tga

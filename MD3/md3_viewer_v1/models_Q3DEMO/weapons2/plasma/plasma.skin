@@ -1,0 +1,13 @@
+// .skin: plasma.skin
+//
+// .md3: D:\a_Eigene Dateien\__Eclipse\workspace\WORKSPACE_MD3\MD3_reader_v5\data\models\weapons2\plasma\plasma.md3
+//
+// tags
+tag_flash,
+tag_weapon,
+
+// surfaces/shaders 
+w_plasma01, models/weapons2/plasma/plasma.tga
+w_plasma02, models/weapons2/plasma/plasma_glass.tga
+w_plasma03, models/weapons2/plasma/plasma_glo.tga
+w_plasma04, models/weapons2/plasma/plasma_glo.tga

@@ -1,0 +1,10 @@
+// .skin: rocketl_flash.skin
+//
+// .md3: D:\a_Eigene Dateien\__Eclipse\workspace\WORKSPACE_MD3\MD3_reader_v5\data\models\weapons2\rocketl\rocketl_flash.md3
+//
+// tags
+tag_flash,
+tag_weapon,
+
+// surfaces/shaders 
+f_rocketl, models/weapons2/rocketl/f_rocketl.tga

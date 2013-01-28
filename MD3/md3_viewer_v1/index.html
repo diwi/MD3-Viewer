@@ -1,0 +1,629 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>MD3 VIEWER</title>
+  <!--<script src="DwLibLoader.js"></script>-->
+
+  <script src="../../libs/Dw/math/DwVec2.js"                          ></script>
+  <script src="../../libs/Dw/math/DwVec3.js"                          ></script>
+  <script src="../../libs/Dw/math/DwVec4.js"                          ></script>
+  <script src="../../libs/Dw/math/DwMat3.js"                          ></script>
+  <script src="../../libs/Dw/math/DwMat4.js"                          ></script>
+  <script src="../../libs/Dw/math/DwQuat.js"                          ></script>
+  <script src="../../libs/Dw/math/DwRotationOrder.js"                 ></script>
+  <script src="../../libs/webgl_utils/webgl-utils.js"                 ></script>
+  <script src="../../libs/webgl_utils/webgl-debug.js"                 ></script>
+  <script src="../../libs/Dw/context/DwContext.js"                    ></script>
+  <script src="../../libs/Dw/shader/DwShader.js"                      ></script>
+  <script src="../../libs/Dw/context/DwFrameInfo.js"                  ></script>
+  <script src="../../libs/Dw/context/DwMouseInfo.js"                  ></script>
+  <script src="../../libs/Dw/context/DwKeyInfo.js"                    ></script>
+  <script src="../../libs/Dw/DwVBO.js"                                ></script>
+  <script src="../../libs/Dw/image/DwImage_TGA.js"                    ></script>
+  <script src="../../libs/Dw/image/DwImage.js"                        ></script>
+  <script src="../../libs/Dw/camera/DwCameraState.js"                 ></script>
+  <script src="../../libs/Dw/camera/DwDampedAction.js"                ></script>
+  <script src="../../libs/Dw/camera/DwCamera.js"                      ></script>
+  <script src="../../libs/Dw/camera/DwInterpolationManager.js"        ></script>
+  <script src="../../libs/Dw/geometry_templates/DwXYZaxis.js"         ></script>
+  <script src="../../libs/Dw/geometry_templates/DwXYZaxisShader.js"   ></script>
+  <script src="../../libs/Dw/geometry_templates/DwRectangle.js"       ></script>
+  <script src="../../libs/Dw/geometry_templates/DwRectangleShader.js" ></script>
+  <script src="../../libs/Dw/geometry_templates/DwScreenQuad.js"      ></script>
+  <script src="../../libs/Dw/geometry_templates/DwScreenQuadShader.js"></script>
+  <script src="../../libs/Dw/FBO/DwFBO.js"                            ></script>
+  <script src="../../libs/Dw/utilitys/Byter.js"                       ></script>
+  <script src="../../libs/Dw/utilitys/DwString.js"                    ></script>
+  <script src="../../libs/Dw/utilitys/DwState.js"                     ></script>
+  <script src="MD3/Files/MD3_File/MD3_File.js"                        ></script>
+  <script src="MD3/Files/MD3_File/MD3_Header.js"                      ></script>
+  <script src="MD3/Files/MD3_File/MD3_Frame.js"                       ></script>
+  <script src="MD3/Files/MD3_File/MD3_TagFrame.js"                    ></script>
+  <script src="MD3/Files/MD3_File/MD3_Tag.js"                         ></script>
+  <script src="MD3/Files/MD3_File/MD3_Surface.js"                     ></script>
+  <script src="MD3/Files/MD3_File/MD3_Shader.js"                      ></script>
+  <script src="MD3/Files/MD3_File/MD3_SurfaceFrame.js"                ></script>
+  <script src="MD3/Files/SkinFile/Q3_SkinFile.js"                     ></script>
+  <script src="MD3/Q3_Object/Q3_Object.js"                            ></script>
+  <script src="MD3/Q3_Object/Q3_surface_VBO.js"                       ></script>
+  <script src="MD3/Q3_Object/Q3_surface_shader.js"                    ></script>
+  <script src="MD3/Q3_Object/Q3_surface_shader_pass_geom.js"          ></script>
+  <script src="MD3/Q3_Object/Q3_TexturePool.js"                       ></script>
+  <script src="MD3/Q3_Model/Q3_Player.js"                             ></script>
+  <script src="MD3/Q3_Model/Q3_Weapon.js"                             ></script>
+  <script src="MD3/Q3_Model/Q3_DepNode.js"                            ></script>
+  <script src="../../libs/Dw/DOF/DOF_shader.js"                       ></script>
+  <script src="GUI.js"                                                ></script>
+  <script src="../../libs/jquery/jquery-1.7.1.js"                     ></script>
+  <script src="../../libs/jquery/ui/jquery.ui.core.js"                ></script>
+  <script src="../../libs/jquery/ui/jquery.ui.widget.js"              ></script>
+  <script src="../../libs/jquery/ui/jquery.ui.mouse.js"               ></script>
+  <script src="../../libs/jquery/ui/jquery.ui.draggable.js"           ></script>
+  <script src="../../libs/jquery/ui/jquery.ui.slider.js"              ></script>
+  <script src="../../libs/jquery/ui/jquery.ui.button.js"              ></script>
+
+  <link rel="stylesheet" href="../../libs/jquery/themes/base/jquery.ui.all.css">
+  <link rel="stylesheet" href="../../libs/jquery/demos/demos.css">
+  <link rel="stylesheet" href="md3_style.css">
+
+  <script type="text/javascript">
+
+//    var groundplane_tex;
+//    var xyz_axis;
+//    var xyz_axis_shader;
+
+    var rectangle;
+    var rectangle_shader;
+
+    var screen_quad;
+    var screen_quad_shader;
+
+    var texturepool;
+    var q3_shader_pass_geom;
+    var q3_shader;
+    var q3_frame_IDX = 0;
+    var player_1, player_2, player_3, player_4;
+    var weapon_1, weapon_2, weapon_3, weapon_4;
+
+    var v4_light_1_world = [  0,   0,   30, 1];
+    var v4_light_2_world = [ 100, -110, 10, 1];
+    var v4_light_3_world = [-100,  100, 100, 1];
+
+    MD3_File        .log = !true;
+    MD3_Header      .log = !true;
+    MD3_Frame       .log = !true;
+    MD3_TagFrame    .log = !true;
+    MD3_Tag         .log = !true;
+    MD3_Surface     .log = !true;
+    MD3_Shader      .log = !true;
+    MD3_SurfaceFrame.log = !true;
+
+    var CTX;
+    var Mat4_ModelView  = DwMat4.identity_new();
+    var Mat4_ModelWorld = DwMat4.identity_new();
+    var Mat4_Projection = DwMat4.identity_new();
+    var Mat3_Normal     = DwMat3.identity_new();
+
+    var FBO_render;
+    var FBO_pass_geom;
+
+    var use_DOF = true;
+    var DOF_shader_v1;
+    var DOF_STRENGTH = 500;
+    var DOF_DISTANCE = 120;
+
+    var GUI_VALUES = {
+      ANIMATION_FRAME : 0,
+      DOF_DISTANCE    : 120,
+      USE_DOF         : true
+    };
+
+    var camera;
+    var camera_state = null;
+    function drawScene() {
+      var gl = CTX.gl;
+      gl.viewport(0, 0, CTX.VIEWPORT.width, CTX.VIEWPORT.height);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+
+      camera.update();
+
+      Mat4_ModelView  = camera.getMat_ModelView_cpy();
+      Mat4_Projection = camera.getMat_Projection_cpy();
+
+      if( CTX.key_info.keyreleased && CTX.key_info.keychar === 'C'){
+        camera.getState().print();
+      }
+
+//      gl.depthFunc(gl.LEQUAL);
+      if( CTX.key_info.keypressed ){
+//        console.log("keypressed: "+CTX.key_info.key);
+        if( CTX.key_info.keychar === ' '){
+
+          var m = CTX.mouse_info;
+          q3_frame_IDX += parseInt( (m.mouseX-m.pmouseX)/2);
+          if( q3_frame_IDX < 0) q3_frame_IDX = 0;
+        }
+      }
+      q3_frame_IDX = GUI_VALUES.ANIMATION_FRAME;
+
+
+      // transform lights into eye-space
+      // not mirrored
+      DwState.pushMat4(Mat4_ModelWorld);
+        DwMat4.scale_ref_slf(Mat4_ModelWorld, [1, 1, 1]);
+        DwMat4.mult_ref( Mat4_ModelView, Mat4_ModelWorld,Mat4_ModelWorld);
+        var v4_light_1_eye = DwMat4.multVec4_new(Mat4_ModelWorld, v4_light_1_world);
+        var v4_light_2_eye = DwMat4.multVec4_new(Mat4_ModelWorld, v4_light_2_world);
+        var v4_light_3_eye = DwMat4.multVec4_new(Mat4_ModelWorld, v4_light_3_world);
+      DwState.popMat4(Mat4_ModelWorld);
+
+      // mirrored (xy-plane)
+      DwState.pushMat4(Mat4_ModelWorld);
+        DwMat4.scale_ref_slf(Mat4_ModelWorld, [1, 1, -1]);
+        DwMat4.mult_ref( Mat4_ModelView, Mat4_ModelWorld,Mat4_ModelWorld);
+        var v4_light_1_eye_mirror = DwMat4.multVec4_new(Mat4_ModelWorld, v4_light_1_world);
+        var v4_light_2_eye_mirror = DwMat4.multVec4_new(Mat4_ModelWorld, v4_light_2_world);
+        var v4_light_3_eye_mirror = DwMat4.multVec4_new(Mat4_ModelWorld, v4_light_3_world);
+      DwState.popMat4(Mat4_ModelWorld);
+
+
+      //------------------------------------------------------------------------
+      // FBO: RENDER PASS
+      //------------------------------------------------------------------------
+      gl.enable(gl.DEPTH_TEST);
+      gl.enable(gl.BLEND);
+      FBO_render.bind();
+      {
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+//        xyz_axis_shader.bind();
+//        {
+//          gl.lineWidth(2.0); //TODO find issue
+//          xyz_axis_shader.setMat4_ModelView(Mat4_ModelView);
+//          xyz_axis_shader.setMat4_Projection(Mat4_Projection);
+//          xyz_axis.draw(xyz_axis_shader);
+//        }
+//        xyz_axis_shader.unbind();
+
+        q3_shader.bind();
+        {
+          q3_shader.setMat4_Projection(Mat4_Projection);
+          // set Lights for floor
+          q3_shader.setVec4_Light(1, v4_light_1_eye);
+          q3_shader.setVec4_Light(2, v4_light_2_eye);
+          q3_shader.setVec4_Light(3, v4_light_3_eye);
+          // make stencil-mask
+          gl.disable(gl.DEPTH_TEST);
+          gl.enable(gl.STENCIL_TEST);
+          gl.clearStencil(0);
+          gl.clear(gl.STENCIL_BUFFER_BIT);
+          gl.stencilFuncSeparate(gl.FRONT, gl.NEVER, 0x1, 0x1);
+          gl.stencilFuncSeparate(gl.BACK,  gl.ALWAYS, 0x1, 0x1);
+          gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+          // make stencil mask
+          q3_shader.setMirrored(false);
+          // draw into stencil buffer
+          drawFloor(gl, rectangle, q3_shader);
+
+          gl.stencilFunc(gl.EQUAL,  0x1, 0x1);
+          gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+          gl.enable(gl.DEPTH_TEST);
+
+          // DRAW MIRRORED
+          q3_shader.setMirrored(true);
+          // set light-positions
+          q3_shader.setVec4_Light(1, v4_light_1_eye_mirror);
+          q3_shader.setVec4_Light(2, v4_light_2_eye_mirror);
+          q3_shader.setVec4_Light(3, v4_light_3_eye_mirror);
+          q3_shader.setDefaultColor([0.4, 0.4, 0.4, 1]);
+          var gray = 0.15;
+          q3_shader.setDefaultColor([gray, gray, gray, 1.00]);
+          DwState.pushMat4(Mat4_ModelWorld);
+          {
+            DwMat4.scale_ref_slf(Mat4_ModelWorld, [1, 1, -1]);
+            DwMat4.translate_ref_slf(Mat4_ModelWorld, [0, 0, 25]);
+            drawModel(gl, player_1, q3_shader, q3_frame_IDX, [0, +50, 0] );
+            drawModel(gl, player_2, q3_shader, q3_frame_IDX, [0, -50, 0] );
+            drawModel(gl, player_3, q3_shader, q3_frame_IDX, [-50, 10, 0] );
+            drawModel(gl, player_4, q3_shader, q3_frame_IDX, [+50, 10, 0] );
+          }
+          DwState.popMat4(Mat4_ModelWorld);
+
+          // DRAW REAL
+          q3_shader.setMirrored(false);
+          // set light-positions
+          q3_shader.setVec4_Light(1, v4_light_1_eye);
+          q3_shader.setVec4_Light(2, v4_light_2_eye);
+          q3_shader.setVec4_Light(3, v4_light_3_eye);
+          gl.disable(gl.STENCIL_TEST);
+          gl.enable(gl.DEPTH_TEST);
+          gl.enable(gl.BLEND);
+//          drawFloor(gl, rectangle, q3_shader, groundplane_tex.HANDLE_TEX);
+          q3_shader.setDefaultColor([0, 0, 0, 0]);
+          DwState.pushMat4(Mat4_ModelWorld);
+          {
+            DwMat4.translate_ref_slf(Mat4_ModelWorld, [0, 0, 25]);
+//            DwMat4.rotateZ_ref_slf(Mat4_ModelWorld, Math.PI);
+            drawModel(gl, player_1, q3_shader, q3_frame_IDX, [0, +50, 0] );
+            drawModel(gl, player_2, q3_shader, q3_frame_IDX, [0, -50, 0] );
+            drawModel(gl, player_3, q3_shader, q3_frame_IDX, [-50, 10, 0] );
+            drawModel(gl, player_4, q3_shader, q3_frame_IDX, [+50, 10, 0] );
+          }
+          DwState.popMat4(Mat4_ModelWorld);
+
+        }
+        q3_shader.unbind();
+      }
+      FBO_render.unbind();
+
+//      drawScreenQuad( gl, screen_quad_shader, screen_quad, FBO_render.getTexture() );
+
+      //------------------------------------------------------------------------
+      // FBO: GEOMETRY PASS (normals, depth)
+      //------------------------------------------------------------------------
+      gl.disable(gl.BLEND);
+      FBO_pass_geom.bind();
+      {
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+        q3_shader_pass_geom.bind();
+        {
+          q3_shader_pass_geom.setMat4_Projection(Mat4_Projection);
+//          drawFloor(gl, rectangle, q3_shader_pass_geom, groundplane_tex.HANDLE_TEX);
+          DwState.pushMat4(Mat4_ModelView);
+          {
+            DwMat4.translate_ref_slf(Mat4_ModelView, [0, 0, 25]);
+            drawModel(gl, player_1, q3_shader_pass_geom, q3_frame_IDX, [  0, +50, 0] );
+            drawModel(gl, player_2, q3_shader_pass_geom, q3_frame_IDX, [  0, -50, 0] );
+            drawModel(gl, player_3, q3_shader_pass_geom, q3_frame_IDX, [-50,  10, 0] );
+            drawModel(gl, player_4, q3_shader_pass_geom, q3_frame_IDX, [+50,  10, 0] );
+          }
+          DwState.popMat4(Mat4_ModelView);
+        }
+        q3_shader_pass_geom.unbind();
+      }
+      FBO_pass_geom.unbind();
+
+
+
+
+
+
+      if( CTX.key_info.keypressed ){
+        if( CTX.key_info.keychar === 'D'){
+          use_DOF = !use_DOF;
+        }
+      }
+      use_DOF = GUI_VALUES.USE_DOF;
+      if( !use_DOF ){
+        drawScreenQuad( gl, screen_quad_shader, screen_quad, FBO_render.getTexture() );
+        return ;
+      }
+
+      //------------------------------------------------------------------------
+      // FBO: DOF PASS
+      //------------------------------------------------------------------------
+      FBO_render.bind();
+      gl.disable(gl.DEPTH_TEST);
+      gl.disable(gl.BLEND);
+
+      if( CTX.key_info.keypressed ){
+        if( CTX.key_info.keychar === 'F'){
+          var m = CTX.mouse_info;
+          DOF_DISTANCE += parseInt( (m.mouseX-m.pmouseX)/2);
+          if( DOF_DISTANCE < 50) DOF_DISTANCE = 50;
+        }
+      }
+      DOF_DISTANCE = GUI_VALUES.DOF_DISTANCE;
+
+      DOF_shader_v1.bind();
+      {
+        DOF_shader_v1.setViewportSize(CTX.VIEWPORT.width , CTX.VIEWPORT.height);
+        DOF_shader_v1.setDOF(DOF_DISTANCE, DOF_STRENGTH);
+        DOF_shader_v1.setCamNearFar(25, 1000);
+
+        DOF_shader_v1.setMat4_Projection(screen_quad.Mat4_Projection);
+
+        DOF_shader_v1.activeTexture(DOF_shader_v1.UN_SAMP2D_RENDERING, 0);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, FBO_render.getTexture() );
+
+        DOF_shader_v1.activeTexture(DOF_shader_v1.UN_SAMP2D_NORMAL_Z, 1);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, FBO_pass_geom.getTexture() );
+
+        screen_quad.draw(DOF_shader_v1);
+        screen_quad.draw(DOF_shader_v1);
+        
+        gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, null );
+        gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, null);
+      }
+      DOF_shader_v1.unbind();
+
+      FBO_render.unbind();
+
+      drawScreenQuad( gl, screen_quad_shader, screen_quad, FBO_render.getTexture() );
+
+    }
+
+
+
+    function drawScreenQuad(gl, shader, screen_quad, texture){
+      gl.disable(gl.DEPTH_TEST);
+      gl.disable(gl.BLEND);
+
+      shader.bind();
+      {
+        shader.setMat4_Projection(screen_quad.Mat4_Projection);
+        shader.activeTexture(0);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texture );
+
+        screen_quad.draw(shader);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, null );
+      }
+      shader.unbind();
+      gl.enable(gl.DEPTH_TEST);
+      gl.enable(gl.BLEND);
+
+    }
+
+
+    function drawFloor(gl, rect, shader ){
+      var Mat3_Proj_floor = DwMat4.toMat3inverseTranspose_new(Mat4_ModelView);
+      var Mat3_Proj_floor = DwMat4.toMat3_new(Mat4_ModelView);
+//      var tex_handle =  groundplane_tex.HANDLE_TEX;
+//      shader.activeTexture(0);
+//      gl.activeTexture(gl.TEXTURE0);
+//      gl.bindTexture(gl.TEXTURE_2D, tex_handle);
+      var gray = 0.15;
+      shader.setDefaultColor([gray, gray, gray, 1.00]);
+      shader.setMat4_ModelView(Mat4_ModelView);
+      shader.setMat4_ModelWorld(Mat4_ModelWorld);
+      shader.setMat3_Normals  (Mat3_Proj_floor);
+      rect.draw(shader);
+    }
+
+    function drawModel(gl, model, shader, frame, v3_transl){
+      DwState.pushMat4(Mat4_ModelWorld);
+      {
+        DwMat4.translate_ref_slf(Mat4_ModelWorld, v3_transl);
+        model.drawModel(shader, frame, Mat4_ModelView, Mat4_ModelWorld);
+      }
+      DwState.popMat4(Mat4_ModelWorld);
+    }
+
+
+
+    function frameAnimation() {
+      requestAnimFrame(frameAnimation);
+      CTX.updateBegin();
+//      CTX.updateVIEWPORTdimensions();
+
+      if( CTX.ANIMATOR  ){
+        drawScene();
+        CTX.WEBGL_ERROR_CHECK();
+      }
+      CTX.updateEnd();
+      updateHTMLtags();
+    }
+
+    function webGLStart() {
+      console.log("... STARTING SETUP");
+      var setuptimer = new Date().getTime();
+      CTX = new DwContext(true);
+      CTX.onclose  = window_CLOSING;
+      CTX.onresize = window_RESIZING;
+
+      initGUI(CTX, GUI_VALUES);
+
+      var gl = CTX.gl;
+      var bg = 0.00;
+      gl.clearColor(bg, bg, bg, 1.0);
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LEQUAL);
+
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.blendEquation( gl.FUNC_ADD );
+
+      camera = new DwCamera(CTX, [0, 0, 25], 400);
+      camera.apply_rotateZ(-45* (Math.PI/180.0));
+      camera.apply_rotateX(-45* (Math.PI/180.0));
+
+      camera.MATRIX_projection = DwMat4.perspective_new(45,  CTX.VIEWPORT.width / CTX.VIEWPORT.height, 25, 1000.0);
+
+//      xyz_axis = new DwXYZaxis(gl, 50);
+//      xyz_axis_shader = new DwXYZaxisShader(gl);
+
+      rectangle = new DwRectangle(gl, -100, -100, 200, 200);
+      rectangle_shader = new DwRectangleShader(gl);
+////      groundplane_tex = new DwImage(gl, "test_images/", "9w00j7v1.bmp");
+
+
+      screen_quad = new DwScreenQuad(gl, CTX.VIEWPORT.width, CTX.VIEWPORT.height);
+      screen_quad_shader = new DwScreenQuadShader(gl);
+
+      texturepool = new Q3_TexturePool(gl);
+
+      q3_shader = new Q3_surface_shader(gl);
+      q3_shader_pass_geom = new Q3_surface_shader_pass_geom(gl);
+
+      // define MD3-objects
+      player_1 = new Q3_Player(gl, "models_Q3DEMO/players/sarge/", "default", texturepool);
+      player_2 = new Q3_Player(gl, "models_Q3DEMO/players/grunt/", "default", texturepool);
+      player_3 = new Q3_Player(gl, "models_Q3DEMO/players/major/", "blue"   , texturepool);
+      player_4 = new Q3_Player(gl, "models_Q3DEMO/players/visor/", "red"    , texturepool);
+
+      weapon_1 = new Q3_Weapon(gl, "models_Q3DEMO/weapons2/gauntlet/", "gauntlet"  , texturepool);
+      weapon_2 = new Q3_Weapon(gl, "models_Q3DEMO/weapons2/rocketl/" , "rocketl"   , texturepool);
+      weapon_3 = new Q3_Weapon(gl, "models_Q3DEMO/weapons2/plasma/"  , "plasma"    , texturepool);
+      weapon_4 = new Q3_Weapon(gl, "models_Q3DEMO/weapons2/shotgun/" , "shotgun"   , texturepool);
+
+      // due to asynchronous loading of arraybuffer-data, its necessary to do it this way
+      weapon_1.onload = function() {  player_1.setWeapon(weapon_1); }
+      weapon_2.onload = function() {  player_2.setWeapon(weapon_2); }
+      weapon_3.onload = function() {  player_3.setWeapon(weapon_3); }
+      weapon_4.onload = function() {  player_4.setWeapon(weapon_4); }
+
+      player_1.onload = function(){ weapon_1.load() };
+      player_2.onload = function(){ weapon_2.load() };
+      player_3.onload = function(){ weapon_3.load() };
+      player_4.onload = function(){ weapon_4.load() };
+
+      // finally load each player (each player loads then its weapon, ....)
+      player_1.load();
+      player_2.load();
+      player_3.load();
+      player_4.load();
+
+//      player_1.getNodeSystem().printNodeSystem();
+//      weapon_1.getNodeSystem().printNodeSystem();
+
+
+      var EXT_tex_float = gl.getExtension("OES_texture_float")
+      console.log("EXT: OES_texture_float = " + EXT_tex_float);
+      FBO_render    = new DwFBO(gl, CTX.VIEWPORT.width, CTX.VIEWPORT.height, gl.UNSIGNED_BYTE);
+      FBO_pass_geom = new DwFBO(gl, CTX.VIEWPORT.width, CTX.VIEWPORT.height, gl.FLOAT);
+
+      DOF_shader_v1 = new DOF_shader(gl);
+      DOF_shader_v1.bind();
+      DOF_shader_v1.setViewportSize(CTX.VIEWPORT.width , CTX.VIEWPORT.height);
+      DOF_shader_v1.setDOF(120, 500);
+      DOF_shader_v1.setCamNearFar(25, 1000);
+      DOF_shader_v1.unbind();
+
+      CTX.WEBGL_ERROR_CHECK();
+
+      console.log("... FINISHED SETUP in "+(new Date().getTime()-setuptimer)+" ms");
+
+      var rotation = [0.409843240771004, 0.6341284707128614, 0.556754328042463,0.3463152015601836];
+      var center   = [0.752354002262458, 0.4980930593590938, 41.24941367371457];
+      var distance = 152.31061280178332;
+
+      var rotation = [0.35462970573211844,0.5657079625891721,0.6263821737834306,0.4023153554637201 ];
+      var center   = [1.497303096494985,-0.8001795356193039,21.408433390866495];
+      var distance = 177.31061280178332;
+      camera_state = new DwCameraState(rotation, center, distance);
+      camera.setState(camera_state, 4000);
+      frameAnimation();
+    }
+
+
+    function window_RESIZING(){
+      camera.MATRIX_projection = DwMat4.perspective_new(45,  CTX.VIEWPORT.width / CTX.VIEWPORT.height, 25, 1000.0);
+
+      screen_quad  .resize(CTX.VIEWPORT.width,  CTX.VIEWPORT.height);
+      FBO_render   .resize(CTX.VIEWPORT.width, CTX.VIEWPORT.height);
+      FBO_pass_geom.resize(CTX.VIEWPORT.width, CTX.VIEWPORT.height);
+      DOF_shader_v1.bind();
+      DOF_shader_v1.setViewportSize(CTX.VIEWPORT.width , CTX.VIEWPORT.height);
+      DOF_shader_v1.unbind();
+      console.log("(window_RESIZING) initStuff, new size = "+CTX.VIEWPORT.width +", "+ CTX.VIEWPORT.height );
+      drawScene();
+    }
+
+    function window_CLOSING(){
+      screen_quad.delete();         screen_quad = null;
+      screen_quad_shader.delete();  screen_quad_shader = null;
+
+//      xyz_axis.delete();            xyz_axis = null;
+//      xyz_axis_shader.delete();     xyz_axis_shader  = null;
+
+      texturepool.delete();         texturepool = null;
+
+      q3_shader.delete();           q3_shader = null;
+      q3_shader_pass_geom.delete(); q3_shader_pass_geom = null;
+
+      FBO_render.delete();          FBO_render = null;
+      FBO_pass_geom.delete();       FBO_pass_geom = null;
+
+      DOF_shader_v1.delete();       DOF_shader_v1 = null;
+
+      player_1.delete();            player_1 = null;
+      player_2.delete();            player_2 = null;
+      player_3.delete();            player_3 = null;
+      player_4.delete();            player_4 = null;
+//      console.log("window_CLOSING() deleting weapons");
+      weapon_1.delete();            weapon_1 = null;
+      weapon_2.delete();            weapon_2 = null;
+      weapon_3.delete();            weapon_3 = null;
+      weapon_4.delete();            weapon_4 = null;
+      console.log("(window_CLOSING) deleting gl-stuff: buffers, shaders, textures, ..." );
+    }
+
+
+    function updateHTMLtags(){
+      document.getElementById("debug_framecount").innerHTML = CTX.frame_info.framecount;
+      document.getElementById("debug_framerate" ).innerHTML = CTX.frame_info.framerate .toFixed( 2 );
+      document.getElementById("debug_mouse_xy"  ).innerHTML = CTX.mouse_info.mouseX +"/ "+CTX.mouse_info.mouseY;
+      document.getElementById("viewport_size"   ).innerHTML = CTX.VIEWPORT.width +"/ "+CTX.VIEWPORT.height;
+//      document.getElementById("debug_inside"    ).innerHTML = CTX.mouse_info.insideCanvas();
+//      document.getElementById("debug_pressed"   ).innerHTML = CTX.mouse_info.mousepressed;
+    }
+
+    function saveView(){
+      camera_state = camera.getState();
+    }
+    function applySavedView(){
+      camera.setState(camera_state, 700);
+    }
+  </script>
+</head>
+<!--<body onload="webGLStart();">-->
+<body >
+  <div id="div_webgl_canvas" class="gui_text" >
+    <canvas id="webgl_fractal"></canvas>
+  </div>
+
+  <div id="gui">
+    <div id="checkbox_show_controls" >
+      <input type="checkbox" id="check_SHOW_CONTROLS" />
+      <label for="check_SHOW_CONTROLS"class="button_label" ></label>
+    </div>
+    <br><br><br>
+    <div id="gui_controls">
+      <div id="checkbox_run" >
+        <input type="checkbox" id="check_RUNNING" />
+        <label for="check_RUNNING" id="check_RUNNING_label "class="button_label" ></label>
+      </div>
+      <p><u>INFO </u></p>
+      <p class="gui_text">
+        framecount: <b id="debug_framecount">.</b><br>
+        framerate:  <b id="debug_framerate" >.</b><br>
+        mouse X/Y:  <b id="debug_mouse_xy"  >.</b><br>
+        viewport:   <b id="viewport_size"   >.</b><br>
+      </p>
+
+      <div id="slider1_fac" class="slider"></div>
+      <p > animation frame: <b id="slider1_val"></b></p>
+      <br>
+      <p><u>DOF </u></p>
+      <div id="checkbox_DOF">
+        <input type="checkbox" id="check_DOF" />
+        <label for="check_DOF" id="check_DOF_label" class="button_label"></label>
+      </div>
+      <br>
+      <div id="slider2_fac" class="slider"></div>
+      <p > DOF-distance: <b id="slider2_val"></b></p>
+      <br>
+      <p><u>NAVIGATION </u></p>
+      <ul>
+        <li>LMB + ALT: orbit</li>
+        <li>LMB + CTRL: zoom</li>
+        <li>LMB + SHIFT: pan</li>
+        <li><a href="javascript:saveView()" >save view</a></li>
+        <li><a href="javascript:applySavedView()" >apply view</a></li>
+      </ul>
+      <br>
+      <p>
+        <a href="http://thomasdiewald.com/blog/" target="blank" class="gui_text">by thomas diewald</a><br>
+      </p>
+    </div>
+  </div>
+  <script type="text/javascript">
+    webGLStart();
+  </script>
+</body>
+</html>
